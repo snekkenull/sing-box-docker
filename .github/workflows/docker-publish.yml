@@ -34,14 +34,12 @@ jobs:
           else
             echo "versioned=ghcr.io/sagernet/sing-box:${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
           fi
-      - name: Build with all tags and release Docker images
+      - name: Build and release Docker images
         uses: docker/build-push-action@v5
         with:
           platforms: linux/386,linux/amd64
           target: dist
           tags: |
-            ${{ steps.tag.outputs.latest }}-full
-            ${{ steps.tag.outputs.versioned }}-full
-          build-args: |
-            WITH_ALL_TAGS=1
+            ${{ steps.tag.outputs.latest }}
+            ${{ steps.tag.outputs.versioned }}
           push: true
