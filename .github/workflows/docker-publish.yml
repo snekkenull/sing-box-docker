@@ -1,0 +1,47 @@
+name: Build Docker Images
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "The tag version you want to build"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Setup QEMU for Docker Buildx
+        uses: docker/setup-qemu-action@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Docker metadata
+        id: metadata
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/snekkenull/sing-box-docker
+      - name: Get tag to build
+        id: tag
+        run: |
+          echo "latest=ghcr.io/snekkenull/sing-box-docker:latest" >> $GITHUB_OUTPUT
+          if [[ -z "${{ github.event.inputs.tag }}" ]]; then
+            echo "versioned=ghcr.io/snekkenull/sing-box-docker:${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "versioned=ghcr.io/snekkenull/sing-box-docker:${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          fi
+      - name: Build with all tags and release Docker images
+        uses: docker/build-push-action@v5
+        with:
+          platforms: linux/386,linux/amd64
+          target: dist
+          tags: |
+            ${{ steps.tag.outputs.latest }}-full
+            ${{ steps.tag.outputs.versioned }}-full
+          build-args: |
+            WITH_ALL_TAGS=1
+          push: true
