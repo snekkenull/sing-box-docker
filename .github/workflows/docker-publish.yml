@@ -4,6 +4,10 @@ on:
     inputs:
       tag:
         description: "The tag version you want to build"
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -36,3 +40,10 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          
+      - name: del old GitHub-workflow
+        uses: Mattraks/delete-workflow-runs@main
+        with:
+          repository: ${{ github.repository }}
+          retain_days: 1
+          keep_minimum_runs: 1 
